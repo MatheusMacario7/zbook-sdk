@@ -3,7 +3,11 @@
  *
  * @brief Unit tests for the Zbook microphone sensor input.
  *
- * @copyright Copyright (c) 2026
+ * @author Matheus Macário dos Santos (matheus.macario@edge.ufal.br)
+ * @version 0.1
+ * @date 23/09/2026
+ *
+ * @copyright Copyright (c) Centro de Inovacao EDGE - 2026
  *
  *******************************************************************/
 
@@ -25,7 +29,7 @@ static void *microphone_suite_setup(void)
 {
 	adc_dev = DEVICE_DT_GET(MICROPHONE_ADC_CTLR);
 
-	zassert_ok(device_init(adc_dev), "failed to bring up ADC emulator device");
+	zassert_ok(device_init(adc_dev), "failed to initialize ADC emulator device");
 	zassert_true(device_is_ready(adc_dev), "ADC emulator device not ready");
 
 	return NULL;
@@ -45,7 +49,7 @@ static void *microphone_suite_setup(void)
 {
 	adc_dev = DEVICE_DT_GET(MICROPHONE_ADC_CTLR);
 
-	zassert_ok(device_init(adc_dev), "failed to bring up ADC emulator device");
+	zassert_ok(device_init(adc_dev), "failed to initialize ADC emulator device");
 	zassert_true(device_is_ready(adc_dev), "ADC emulator device not ready");
 
 	return NULL;
@@ -73,7 +77,7 @@ ZTEST(zbook_hw_errors, test_init_fails_while_device_not_ready)
 
 	zassert_equal(zbook_microphone_init(), -ENODEV);
 
-	zassert_ok(device_init(dev), "failed to bring up ADC emulator device for later tests");
+	zassert_ok(device_init(dev), "failed to initialize ADC emulator device for later tests");
 	zassert_true(device_is_ready(dev));
 }
 
