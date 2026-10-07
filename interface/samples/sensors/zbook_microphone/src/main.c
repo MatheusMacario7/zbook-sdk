@@ -1,14 +1,12 @@
 /*******************************************************************
  * @file main.c
  *
- * @brief Sample: bring-up test for the ZBook microphone sensor. A single
- * raw sample doesn't say much about an AC audio signal on its own -- this
- * bursts as many reads as it can fit in a short window and reports the
- * min/max/peak-to-peak seen, once a second. Staying quiet should give a
- * small peak-to-peak (the mic sitting near its DC bias); making noise
- * (talking, clapping) near the mic should visibly widen it.
+ * @brief Sample application for the Zbook microphone sensor input.
+ * @author Matheus Macário dos Santos (matheus.macario@edge.ufal.br) 
+ * @version 0.1
+ * @date 23/09/2026
  *
- * @copyright Copyright (c) 2026
+ * @copyright Copyright (c) Centro de Inovacao EDGE - 2026
  *
  *******************************************************************/
 
@@ -19,12 +17,14 @@
 
 LOG_MODULE_REGISTER(zbook_microphone_sample);
 
-#define SAMPLE_WINDOW_MS 200
-#define REPORT_PERIOD     K_SECONDS(1)
-
 int main(void)
 {
 	int ret;
+	uint16_t sample;
+	uint16_t min;
+	uint16_t max;
+	uint32_t valid_samples;
+	int64_t window_end;
 
 	ret = zbook_microphone_init();
 	if (ret) {
@@ -33,18 +33,19 @@ int main(void)
 	}
 
 	while (1) {
-		uint16_t min = UINT16_MAX;
-		uint16_t max = 0;
-		int64_t window_end = k_uptime_get() + SAMPLE_WINDOW_MS;
+		min = UINT16_MAX;
+		max = 0;
+		valid_samples = 0;
+		window_end = k_uptime_get() + CONFIG_APP_SAMPLE_WINDOW_MS;
 
 		while (k_uptime_get() < window_end) {
-			uint16_t sample;
-
 			ret = zbook_microphone_read(&sample);
 			if (ret) {
 				LOG_ERR("zbook_microphone_read failed (%d)", ret);
 				continue;
 			}
+
+			valid_samples++;
 
 			if (sample < min) {
 				min = sample;
@@ -54,9 +55,13 @@ int main(void)
 			}
 		}
 
-		LOG_INF("mic: min=%u max=%u peak-to-peak=%u", min, max, max - min);
+		if (valid_samples == 0) {
+			LOG_WRN("mic: no valid samples in window");
+		} else {
+			LOG_INF("mic: min=%u max=%u peak-to-peak=%u", min, max, max - min);
+		}
 
-		k_sleep(REPORT_PERIOD);
+		k_sleep(K_MSEC(CONFIG_APP_REPORT_INTERVAL_MS));
 	}
 
 	return 0;
